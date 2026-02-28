@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Web-Guard</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1f4037, #99f2c8);
+            font-family: Arial;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            width: 420px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: none;
+        }
+
+        button {
+            background: #1f4037;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .progress {
+            width: 100%;
+            background: #eee;
+            height: 25px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00f260, #0575e6);
+            transition: .4s;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h2>Web-Guard</h2>
+
+        <input id="url" placeholder="Enter URL">
+
+        <select id="scan">
+            <option value="spider">Spider</option>
+            <option value="passive">Passive</option>
+            <option value="active">Active</option>
+            <option value="sqli">SQL Injection</option>
+            <option value="xss">XSS</option>
+            <option value="ajax">AJAX Spider</option>
+            <option value="sqli">SQL Injection (Advanced)</option>
+        </select>
+
+        <button onclick="startScan()">Start Scan</button>
+
+        <div class="progress" id="progressBox">
+            <div class="bar" id="bar"></div>
+        </div>
+
+        <div class="status" id="status"></div>
+
+    </div>
+
+    <script>
+
+        function startScan() {
+
+            document.getElementById("progressBox").style.display = "block"
+
+            fetch("/start_scan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    url: document.getElementById("url").value,
+                    scan: document.getElementById("scan").value
+                })
+            })
+
+            poll()
+        }
+
+        function poll() {
+
+            let interval = setInterval(() => {
+
+                fetch("/progress")
+                    .then(r => r.json())
+                    .then(data => {
+
+                        document.getElementById("bar").style.width = data.progress + "%"
+                        document.getElementById("status").innerText = data.status
+
+                        if (data.progress >= 100) {
+                            clearInterval(interval)
+                            window.location = "/result"
+                        }
+
+                    })
+
+            }, 800)
+
+        }
+    </script>
+
+</body>
+
+</html>

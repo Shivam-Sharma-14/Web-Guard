@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Results</title>
+
+<style>
+body{
+background:#0f2027;
+font-family:Arial;
+color:white;
+padding:40px;
+}
+
+.card{
+background:#1e1e1e;
+margin:15px 0;
+padding:20px;
+border-radius:12px;
+box-shadow:0 0 10px #000;
+}
+
+.score{
+font-size:22px;
+font-weight:bold;
+}
+
+.badge{
+padding:6px 12px;
+border-radius:8px;
+font-weight:bold;
+color:black;
+}
+</style>
+</head>
+<body>
+
+<h1>Scan Results</h1>
+
+{% for r in results %}
+<div class="card">
+
+<div class="score">
+Score: {{r.score}}
+<span class="badge" style="background:{{r.color}}">
+{{r.severity}}
+</span>
+</div>
+
+<pre>{{r}}</pre>
+
+</div>
+{% endfor %}
+
+<br>
+<a href="/reports/{{pdf}}" download style="color:#00ffd5;font-size:20px;">
+Download PDF Report
+</a>
+
+</body>
+</html>
