@@ -1,60 +1,558 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Results</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web-Guard — Scan Results</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
 
-<style>
-body{
-background:#0f2027;
-font-family:Arial;
-color:white;
-padding:40px;
-}
+  <style>
+    /* ─── TOKENS ─────────────────────────────── */
+    :root {
+      --ink:       #0e0e0e;
+      --paper:     #f5f2eb;
+      --cream:     #ede9df;
+      --rule:      #0e0e0e;
+      --accent:    #c0341d;
+      --ghost:     #b8b3a8;
+      --mono:      'DM Mono', monospace;
+      --serif:     'Playfair Display', Georgia, serif;
+      --bask:      'Libre Baskerville', serif;
 
-.card{
-background:#1e1e1e;
-margin:15px 0;
-padding:20px;
-border-radius:12px;
-box-shadow:0 0 10px #000;
-}
+      /* severity palette — muted, editorial */
+      --sev-critical: #c0341d;
+      --sev-high:     #b5621e;
+      --sev-medium:   #7a6b2e;
+      --sev-low:      #2e6b4f;
+      --sev-info:     #2e4b6b;
+    }
 
-.score{
-font-size:22px;
-font-weight:bold;
-}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
 
-.badge{
-padding:6px 12px;
-border-radius:8px;
-font-weight:bold;
-color:black;
-}
-</style>
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--mono);
+      min-height: 100vh;
+      padding: 48px 24px 80px;
+      position: relative;
+    }
+
+    /* grain */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.35;
+    }
+
+    /* ─── OUTER WRAP ─────────────────────────── */
+    .page {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* ─── MASTHEAD ───────────────────────────── */
+    .masthead {
+      border-top: 3px solid var(--ink);
+      border-bottom: 1px solid var(--ink);
+      padding: 6px 0 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0;
+    }
+
+    .masthead-left,
+    .masthead-right {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ghost);
+    }
+
+    /* ─── HERO ───────────────────────────────── */
+    .hero {
+      padding: 48px 0 36px;
+      border-bottom: 1px solid var(--ink);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 0 40px;
+    }
+
+    .issue-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .issue-label::before {
+      content: '';
+      display: inline-block;
+      width: 24px;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    .page-title {
+      font-family: var(--serif);
+      font-size: clamp(42px, 7vw, 72px);
+      font-weight: 900;
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+    }
+
+    .page-title em {
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    /* summary stat block top-right */
+    .hero-stats {
+      text-align: right;
+      padding-bottom: 4px;
+    }
+
+    .hero-stat-num {
+      font-family: var(--serif);
+      font-size: 56px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .hero-stat-label {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ghost);
+      margin-top: 4px;
+    }
+
+    /* ─── SUMMARY STRIP ──────────────────────── */
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      border-bottom: 1px solid var(--ink);
+    }
+
+    .summary-cell {
+      padding: 18px 0 14px;
+      border-right: 1px solid var(--ink);
+      text-align: center;
+    }
+
+    .summary-cell:last-child { border-right: none; }
+
+    .summary-cell-count {
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .summary-cell-label {
+      font-family: var(--mono);
+      font-size: 7.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-top: 5px;
+    }
+
+    /* severity colour mapping */
+    .sev-critical .summary-cell-count { color: var(--sev-critical); }
+    .sev-high     .summary-cell-count { color: var(--sev-high);     }
+    .sev-medium   .summary-cell-count { color: var(--sev-medium);   }
+    .sev-low      .summary-cell-count { color: var(--sev-low);      }
+    .sev-info     .summary-cell-count { color: var(--sev-info);     }
+
+    .sev-critical .summary-cell-label { color: var(--sev-critical); }
+    .sev-high     .summary-cell-label { color: var(--sev-high);     }
+    .sev-medium   .summary-cell-label { color: var(--sev-medium);   }
+    .sev-low      .summary-cell-label { color: var(--sev-low);      }
+    .sev-info     .summary-cell-label { color: var(--sev-info);     }
+
+    /* ─── RESULTS SECTION ────────────────────── */
+    .results-section {
+      padding-top: 44px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .section-num   { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ghost); }
+    .section-title { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink);   }
+
+    /* ─── RESULT CARD ────────────────────────── */
+    .result-card {
+      border-top: 1px solid var(--ink);
+      padding: 28px 0 28px;
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 0 32px;
+      align-items: start;
+      animation: fadeSlide 0.35s ease both;
+    }
+
+    .result-card:last-of-type {
+      border-bottom: 1px solid var(--ink);
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* stagger */
+    .result-card:nth-child(1)  { animation-delay: .05s; }
+    .result-card:nth-child(2)  { animation-delay: .10s; }
+    .result-card:nth-child(3)  { animation-delay: .15s; }
+    .result-card:nth-child(4)  { animation-delay: .20s; }
+    .result-card:nth-child(5)  { animation-delay: .25s; }
+    .result-card:nth-child(6)  { animation-delay: .30s; }
+    .result-card:nth-child(7)  { animation-delay: .35s; }
+    .result-card:nth-child(8)  { animation-delay: .40s; }
+    .result-card:nth-child(9)  { animation-delay: .45s; }
+    .result-card:nth-child(10) { animation-delay: .50s; }
+
+    /* left col: index + severity pill */
+    .card-index {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 3px;
+    }
+
+    .card-num {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      color: var(--ghost);
+    }
+
+    .severity-pill {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 7.5px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      border: 1px solid currentColor;
+      padding: 3px 8px;
+      border-radius: 0;           /* Swiss — no rounding */
+      width: fit-content;
+    }
+
+    .pill-critical { color: var(--sev-critical); }
+    .pill-high     { color: var(--sev-high);     }
+    .pill-medium   { color: var(--sev-medium);   }
+    .pill-low      { color: var(--sev-low);      }
+    .pill-info     { color: var(--sev-info);     }
+
+    /* centre col: content */
+    .card-body {}
+
+    .card-score-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .card-score-label {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--ghost);
+    }
+
+    .card-score-value {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .card-detail {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      line-height: 1.65;
+      color: #555;
+      white-space: pre-wrap;
+      word-break: break-all;
+      background: var(--cream);
+      padding: 14px 16px;
+      border-left: 2px solid var(--ghost);
+      margin-top: 8px;
+    }
+
+    /* right col: score bar */
+    .card-bar-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      padding-top: 6px;
+    }
+
+    .bar-track {
+      width: 3px;
+      height: 80px;
+      background: var(--cream);
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .bar-fill {
+      width: 100%;
+      background: var(--ink);
+      transition: height 0.8s cubic-bezier(.22,.68,0,1.2);
+    }
+
+    .bar-note {
+      font-family: var(--mono);
+      font-size: 7.5px;
+      letter-spacing: 0.1em;
+      color: var(--ghost);
+      writing-mode: vertical-rl;
+      text-transform: uppercase;
+    }
+
+    /* ─── DOWNLOAD ROW ───────────────────────── */
+    .download-row {
+      margin-top: 52px;
+      padding-top: 28px;
+      border-top: 1px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .download-copy {
+      font-family: var(--bask);
+      font-style: italic;
+      font-size: 12px;
+      color: var(--ghost);
+      line-height: 1.7;
+      max-width: 320px;
+    }
+
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      background: transparent;
+      border: 1.5px solid var(--ink);
+      padding: 16px 28px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s;
+    }
+
+    .btn-download:hover {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .btn-download svg {
+      width: 13px;
+      height: 13px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* back link */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ghost);
+      text-decoration: none;
+      margin-top: 40px;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover { color: var(--ink); }
+    .back-link::before { content: '←'; font-family: var(--serif); font-size: 13px; }
+
+    /* ─── FOOTER ─────────────────────────────── */
+    .footer-strip {
+      margin-top: 56px;
+      border-top: 3px solid var(--ink);
+      padding: 8px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .footer-l, .footer-r {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ghost);
+    }
+
+    .footer-r { font-family: var(--serif); font-style: italic; text-transform: none; letter-spacing: 0; }
+
+    /* ─── RESPONSIVE ─────────────────────────── */
+    @media (max-width: 600px) {
+      .hero          { grid-template-columns: 1fr; }
+      .hero-stats    { text-align: left; margin-top: 20px; }
+      .summary-strip { grid-template-columns: repeat(3, 1fr); }
+      .result-card   { grid-template-columns: 56px 1fr; }
+      .card-bar-col  { display: none; }
+      .download-row  { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
 </head>
 <body>
 
-<h1>Scan Results</h1>
+<div class="page">
 
-{% for r in results %}
-<div class="card">
+  <!-- ── MASTHEAD ── -->
+  <header class="masthead">
+    <span class="masthead-left">Security Intelligence · Vol. IV</span>
+    <span class="masthead-right">Scan Report · {{ now | default("2024") }}</span>
+  </header>
 
-<div class="score">
-Score: {{r.score}}
-<span class="badge" style="background:{{r.color}}">
-{{r.severity}}
-</span>
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div>
+      <p class="issue-label">Findings Report</p>
+      <h1 class="page-title">Scan <em>Results</em></h1>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat-num" id="totalCount">{{ results | length }}</div>
+      <div class="hero-stat-label">Total findings</div>
+    </div>
+  </section>
+
+  <!-- ── SUMMARY STRIP ── -->
+  <div class="summary-strip" id="summaryStrip">
+    <div class="summary-cell sev-critical">
+      <div class="summary-cell-count" id="cnt-critical">–</div>
+      <div class="summary-cell-label">Critical</div>
+    </div>
+    <div class="summary-cell sev-high">
+      <div class="summary-cell-count" id="cnt-high">–</div>
+      <div class="summary-cell-label">High</div>
+    </div>
+    <div class="summary-cell sev-medium">
+      <div class="summary-cell-count" id="cnt-medium">–</div>
+      <div class="summary-cell-label">Medium</div>
+    </div>
+    <div class="summary-cell sev-low">
+      <div class="summary-cell-count" id="cnt-low">–</div>
+      <div class="summary-cell-label">Low</div>
+    </div>
+    <div class="summary-cell sev-info">
+      <div class="summary-cell-count" id="cnt-info">–</div>
+      <div class="summary-cell-label">Info</div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <section class="results-section">
+
+    <div class="section-head">
+      <span class="section-num">§ 02</span>
+      <span class="section-title">Vulnerability Index</span>
+    </div>
+
+    <!-- Jinja2 loop — each r has: r.score, r.severity, r.color (unused, we remap) -->
+    {% for r in results %}
+    <div class="result-card">
+
+      <!-- left: index + pill -->
+      <div class="card-index">
+        <span class="card-num">{{ "%02d" | format(loop.index) }}</span>
+        <span class="severity-pill pill-{{ r.severity | lower | default('info') }}">
+          {{ r.severity | default("Info") }}
+        </span>
+      </div>
+
+      <!-- centre: score + detail -->
+      <div class="card-body">
+        <div class="card-score-row">
+          <span class="card-score-label">CVSS</span>
+          <span class="card-score-value">{{ r.score }}</span>
+        </div>
+        <pre class="card-detail">{{ r }}</pre>
+      </div>
+
+      <!-- right: vertical score bar -->
+      <div class="card-bar-col">
+        <div class="bar-track">
+          <div class="bar-fill" style="height: {{ [((r.score | float) / 10 * 100) | int, 100] | min }}%;"></div>
+        </div>
+        <span class="bar-note">{{ r.score }}/10</span>
+      </div>
+
+    </div>
+    {% endfor %}
+
+  </section>
+
+  <!-- ── BACK LINK ── -->
+  <a href="/" class="back-link">New Scan</a>
+
+  <!-- ── DOWNLOAD ── -->
+  <div class="download-row">
+    <p class="download-copy">
+      Full findings exported as a structured PDF — suitable for engineering review, security audits, and stakeholder briefings.
+    </p>
+    <a class="btn-download" href="/reports/{{ pdf }}" download>
+      <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M3 17v2a2 2 0 002 2h14a2 2 0 002-2v-2"/></svg>
+      Download PDF Report
+    </a>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer-strip">
+    <span class="footer-l">Web-Guard · Security Platform</span>
+    <span class="footer-r">Precision. Clarity. Control.</span>
+  </footer>
+
 </div>
-
-<pre>{{r}}</pre>
-
-</div>
-{% endfor %}
-
-<br>
-<a href="/reports/{{pdf}}" download style="color:#00ffd5;font-size:20px;">
-Download PDF Report
-</a>
 
 </body>
 </html>

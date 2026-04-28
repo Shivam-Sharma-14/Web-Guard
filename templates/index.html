@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 
 <head>
@@ -133,4 +133,645 @@
 
 </body>
 
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web-Guard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── TOKENS ─────────────────────────────── */
+    :root {
+      --ink:       #0e0e0e;
+      --paper:     #f5f2eb;
+      --cream:     #ede9df;
+      --rule:      #0e0e0e;
+      --accent:    #c0341d;      /* Swiss signal red */
+      --ghost:     #b8b3a8;
+      --mono:      'DM Mono', monospace;
+      --serif:     'Playfair Display', Georgia, serif;
+      --bask:      'Libre Baskerville', serif;
+      --col:       8px;          /* base grid unit */
+    }
+
+    /* ─── RESET ──────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+
+    /* ─── GLOBAL ─────────────────────────────── */
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--mono);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 48px 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* subtle grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.35;
+    }
+
+    /* ─── PAGE LAYOUT ────────────────────────── */
+    .page {
+      width: 100%;
+      max-width: 720px;
+      display: grid;
+      gap: 0;
+    }
+
+    /* ─── MASTHEAD ───────────────────────────── */
+    .masthead {
+      border-top: 3px solid var(--ink);
+      border-bottom: 1px solid var(--ink);
+      padding: 6px 0 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0;
+    }
+
+    .masthead-left {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ghost);
+    }
+
+    .masthead-right {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ghost);
+    }
+
+    /* ─── HERO BLOCK ─────────────────────────── */
+    .hero {
+      padding: 52px 0 40px;
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 0 48px;
+      align-items: end;
+      border-bottom: 1px solid var(--ink);
+    }
+
+    .hero-left {}
+
+    .issue-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .issue-label::before {
+      content: '';
+      display: inline-block;
+      width: 24px;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    .wordmark {
+      font-family: var(--serif);
+      font-weight: 900;
+      font-size: clamp(52px, 9vw, 88px);
+      line-height: 0.9;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .wordmark em {
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .hero-right {
+      padding-bottom: 8px;
+    }
+
+    .hero-desc {
+      font-family: var(--bask);
+      font-size: 12.5px;
+      line-height: 1.75;
+      color: #555;
+      font-style: italic;
+    }
+
+    .hero-rule-num {
+      font-family: var(--mono);
+      font-size: 72px;
+      font-weight: 300;
+      color: var(--cream);
+      line-height: 1;
+      letter-spacing: -0.04em;
+      margin-top: 12px;
+      user-select: none;
+    }
+
+    /* ─── FORM SECTION ───────────────────────── */
+    .form-section {
+      padding: 44px 0 0;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .section-num {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ghost);
+    }
+
+    .section-title {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    /* ─── FIELD GROUPS ───────────────────────── */
+    .field-group {
+      margin-bottom: 28px;
+    }
+
+    .field-label {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ghost);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .field-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1.5px solid var(--ink);
+      padding: 10px 0 12px;
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+      letter-spacing: -0.01em;
+    }
+
+    .field-input::placeholder {
+      color: var(--ghost);
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .field-input:focus {
+      border-bottom-color: var(--accent);
+    }
+
+    /* ─── SCAN TYPE GRID ─────────────────────── */
+    .scan-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      border: 1px solid var(--ink);
+      margin-top: 10px;
+    }
+
+    .scan-option {
+      position: relative;
+    }
+
+    .scan-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .scan-label {
+      display: flex;
+      flex-direction: column;
+      padding: 14px 16px 13px;
+      cursor: pointer;
+      border-right: 1px solid var(--ink);
+      background: var(--paper);
+      transition: background 0.15s;
+      user-select: none;
+    }
+
+    .scan-option:last-child .scan-label { border-right: none; }
+
+    .scan-label-num {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      color: var(--ghost);
+      margin-bottom: 6px;
+    }
+
+    .scan-label-name {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--ink);
+      text-transform: uppercase;
+    }
+
+    /* second row — no top border needed, gap=1px creates it */
+    .scan-option input[type="radio"]:checked + .scan-label {
+      background: var(--ink);
+    }
+
+    .scan-option input[type="radio"]:checked + .scan-label .scan-label-num,
+    .scan-option input[type="radio"]:checked + .scan-label .scan-label-name {
+      color: var(--paper);
+    }
+
+    .scan-option input[type="radio"]:checked + .scan-label .scan-label-num {
+      color: var(--accent);
+    }
+
+    /* ─── DIVIDER ────────────────────────────── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 40px 0 36px;
+    }
+
+    .divider-line { flex: 1; height: 1px; background: var(--ink); }
+
+    .divider-mark {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ghost);
+    }
+
+    /* ─── CTA BUTTON ─────────────────────────── */
+    .cta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .cta-copy {
+      font-family: var(--bask);
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--ghost);
+      font-style: italic;
+      max-width: 280px;
+    }
+
+    .btn-scan {
+      flex-shrink: 0;
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 18px 36px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.2s;
+    }
+
+    .btn-scan::after {
+      content: '→';
+      margin-left: 14px;
+      font-family: var(--serif);
+      font-style: normal;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+
+    .btn-scan:hover { background: var(--accent); }
+    .btn-scan:active { transform: translateY(1px); }
+
+    /* ─── PROGRESS BLOCK ─────────────────────── */
+    .progress-block {
+      margin-top: 40px;
+      border-top: 1px solid var(--ink);
+      padding-top: 28px;
+      display: none;
+      animation: fadeSlide 0.4s ease;
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .progress-block.visible { display: block; }
+
+    .prog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 16px;
+    }
+
+    .prog-label {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ghost);
+    }
+
+    .prog-pct {
+      font-family: var(--serif);
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--ink);
+      transition: color 0.3s;
+    }
+
+    .prog-track {
+      width: 100%;
+      height: 2px;
+      background: var(--cream);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .prog-fill {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      width: 0%;
+      background: var(--ink);
+      transition: width 0.4s ease;
+    }
+
+    .prog-fill.done { background: var(--accent); }
+
+    .prog-status {
+      font-family: var(--bask);
+      font-size: 12px;
+      color: #777;
+      font-style: italic;
+      min-height: 20px;
+      transition: opacity 0.3s;
+    }
+
+    /* ─── FOOTER STRIP ───────────────────────── */
+    .footer-strip {
+      margin-top: 56px;
+      border-top: 3px solid var(--ink);
+      padding: 8px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .footer-l {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ghost);
+    }
+
+    .footer-r {
+      font-family: var(--serif);
+      font-size: 9px;
+      font-style: italic;
+      color: var(--ghost);
+    }
+
+  </style>
+</head>
+<body>
+
+<main class="page">
+
+  <!-- ── MASTHEAD ── -->
+  <header class="masthead">
+    <span class="masthead-left">Security Intelligence · Vol. IV</span>
+    <span class="masthead-right">Est. 2024 &nbsp;·&nbsp; India</span>
+  </header>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-left">
+      <p class="issue-label">Vulnerability Analysis</p>
+      <h1 class="wordmark">Web&#8209;<em>Guard</em></h1>
+    </div>
+    <div class="hero-right">
+      <p class="hero-desc">
+        Precision scanning for the modern web. Identify exposures before they become incidents.
+      </p>
+      <p class="hero-rule-num">01</p>
+    </div>
+  </section>
+
+  <!-- ── FORM ── -->
+  <section class="form-section">
+
+    <div class="section-head">
+      <span class="section-num">§ 01</span>
+      <span class="section-title">Target Configuration</span>
+    </div>
+
+    <!-- URL field -->
+    <div class="field-group">
+      <label class="field-label" for="url">Target URL</label>
+      <input
+        class="field-input"
+        id="url"
+        type="url"
+        placeholder="https://example.com"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
+
+    <!-- Scan type grid -->
+    <div class="field-group">
+      <span class="field-label">Scan Protocol</span>
+      <div class="scan-grid">
+
+        <div class="scan-option">
+          <input type="radio" name="scan" id="s-spider" value="spider" checked />
+          <label class="scan-label" for="s-spider">
+            <span class="scan-label-num">A·01</span>
+            <span class="scan-label-name">Spider</span>
+          </label>
+        </div>
+
+        <div class="scan-option">
+          <input type="radio" name="scan" id="s-passive" value="passive" />
+          <label class="scan-label" for="s-passive">
+            <span class="scan-label-num">A·02</span>
+            <span class="scan-label-name">Passive</span>
+          </label>
+        </div>
+
+        <div class="scan-option">
+          <input type="radio" name="scan" id="s-active" value="active" />
+          <label class="scan-label" for="s-active">
+            <span class="scan-label-num">A·03</span>
+            <span class="scan-label-name">Active</span>
+          </label>
+        </div>
+
+        <div class="scan-option">
+          <input type="radio" name="scan" id="s-sqli" value="sqli" />
+          <label class="scan-label" for="s-sqli" style="border-top:1px solid var(--ink);">
+            <span class="scan-label-num">B·01</span>
+            <span class="scan-label-name">SQL Inject</span>
+          </label>
+        </div>
+
+        <div class="scan-option">
+          <input type="radio" name="scan" id="s-xss" value="xss" />
+          <label class="scan-label" for="s-xss" style="border-top:1px solid var(--ink);">
+            <span class="scan-label-num">B·02</span>
+            <span class="scan-label-name">XSS</span>
+          </label>
+        </div>
+
+        <div class="scan-option">
+          <input type="radio" name="scan" id="s-ajax" value="ajax" />
+          <label class="scan-label" for="s-ajax" style="border-top:1px solid var(--ink);">
+            <span class="scan-label-num">B·03</span>
+            <span class="scan-label-name">AJAX Spider</span>
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── DIVIDER ── -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <span class="divider-mark">Initiate</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- ── CTA ── -->
+  <div class="cta-row">
+    <p class="cta-copy">
+      All traffic is routed through isolated analysis nodes. No data is retained beyond the session.
+    </p>
+    <button class="btn-scan" onclick="startScan()">Run Scan</button>
+  </div>
+
+  <!-- ── PROGRESS ── -->
+  <div class="progress-block" id="progressBlock">
+    <div class="prog-header">
+      <span class="prog-label">Analysis in progress</span>
+      <span class="prog-pct" id="progPct">0%</span>
+    </div>
+    <div class="prog-track">
+      <div class="prog-fill" id="progFill"></div>
+    </div>
+    <p class="prog-status" id="progStatus">Initialising scanner…</p>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer-strip">
+    <span class="footer-l">Web-Guard · Security Platform</span>
+    <span class="footer-r">Precision. Clarity. Control.</span>
+  </footer>
+
+</main>
+
+<script>
+  function startScan() {
+    const block = document.getElementById('progressBlock');
+    block.classList.add('visible');
+
+    const scanVal = document.querySelector('input[name="scan"]:checked').value;
+
+    fetch('/start_scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: document.getElementById('url').value,
+        scan: scanVal
+      })
+    }).catch(() => {});   // graceful if no backend
+
+    poll();
+  }
+
+  function poll() {
+    const fill   = document.getElementById('progFill');
+    const pct    = document.getElementById('progPct');
+    const status = document.getElementById('progStatus');
+
+    const interval = setInterval(() => {
+      fetch('/progress')
+        .then(r => r.json())
+        .then(data => {
+          const p = data.progress || 0;
+          fill.style.width  = p + '%';
+          pct.textContent   = p + '%';
+          status.textContent = data.status || '';
+
+          if (p >= 100) {
+            clearInterval(interval);
+            fill.classList.add('done');
+            status.textContent = 'Scan complete — redirecting to report…';
+            setTimeout(() => window.location = '/result', 1200);
+          }
+        })
+        .catch(() => clearInterval(interval));
+    }, 800);
+  }
+</script>
+
+</body>
 </html>
